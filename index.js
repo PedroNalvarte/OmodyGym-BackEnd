@@ -38,6 +38,19 @@ app.post('/reset/:user/:password', (req, res) => {
         })
 });
 
+app.post('/membership/:detalle/:costo/:nombre/:usuario', (req, res) => {
+
+    const detail = req.params.detalle;
+    const cost = req.params.costo;
+    const number = req.params.nombre;
+    const user = req.params.usuario;
+
+    createMembership(detail, cost, number, user)
+        .then((result) => {
+            console.log(JSON.stringify(result.registrar_membresia));
+            res.json(JSON.stringify(result.registrar_membresia));
+        })
+});
 app.listen(port, () => {
     console.log(`Example app listening on port ${port}`)
 })
@@ -94,4 +107,30 @@ const resetPassword = async (user, password) => {
     await client.end();
 
     return result;
+}
+
+
+const createMembership = async (detail, cost, name, user) => {
+
+    const client = new Client({
+        user: "omodygym_user",
+        host: "dpg-cocr9amv3ddc739ki7b0-a.oregon-postgres.render.com",
+        database: "omodygym",
+        password: "9sAnVEwzwYzR1GMdsET5UQo7XzYjcrup",
+        port: 5432,
+        ssl: {
+            rejectUnauthorizedL: false,
+        }
+    });
+
+    await client.connect();
+
+    const res = await client.query(`public.registrar_membresia('${detail}', '${cost}', '${name}', '${user}')`);
+
+    const result = res.rows[0];
+
+    await client.end();
+
+    return result;
+
 }
