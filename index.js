@@ -38,6 +38,7 @@ app.post('/reset/:user/:password', (req, res) => {
         })
 });
 
+<<<<<<< HEAD
 app.post('/registerSede/:dni', (req, res) => {
 
     registerSede(req.body, req.params.dni)
@@ -67,9 +68,69 @@ app.post('/listColaboradores', (req, res) => {
         })
 });
 
+=======
+app.post('/createMembership/:detalle/:costo/:nombre/:usuario', (req, res) => {
+    const detail = req.params.detalle;
+    const cost = req.params.costo;
+    const name = req.params.nombre;
+    const user = req.params.usuario;
+
+    createMembership(detail, cost, name, user)
+        .then((result) => {
+            res.send(result.res);
+        })
+});
+app.post('/getClients', (req, res) => {
+    getClients().then((result) => {
+        res.send(result);
+    }).catch((error) => {
+        console.error("Error al obtener las membresías:", error);
+    });
+
+});
+app.post('/getClientsFiltered/:input', (req, res) => {
+    const input = req.params.input;
+    getClientsFiltered(input).then((result) => {
+        res.send(result);
+    }).catch((error) => {
+        console.error("Error al obtener las membresías:", error);
+    });
+
+});
+app.post('/getMemberships', (req, res) => {
+    getMemberships().then((result) => {
+        res.send(result);
+    }).catch((error) => {
+        console.error("Error al obtener las membresías:", error);
+    });
+
+  
+    
+
+});
+
+app.post('/getInactiveMemberships', (req, res) => {
+    getInactiveMemberships().then((result) => {
+        res.send(result);
+    }).catch((error) => {
+        console.error("Error al obtener las membresías:", error);
+    });
+});
+
+app.post('/updateMembershipStatus/:id', (req, res) => {
+    const idM = req.params.id;
+    updateMembershipStatus(idM).then((result) => {
+        res.send(result);
+    }).catch((error) => {
+        console.error("Error al obtener las membresías:", error);
+    } )
+})
+>>>>>>> origin/Backend-Nicole
 app.listen(port, () => {
     console.log(`Example app listening on port ${port}`)
 })
+
+
 
 
 //-----------------------------Funciones----------------------------
@@ -125,8 +186,13 @@ const resetPassword = async (user, password) => {
     return result;
 }
 
+<<<<<<< HEAD
 const registerSede = async (sede, dni) => {
 
+=======
+
+const createMembership = async (detail, cost, name, user) => {
+>>>>>>> origin/Backend-Nicole
     const client = new Client({
         user: "omodygym_user",
         host: "dpg-cocr9amv3ddc739ki7b0-a.oregon-postgres.render.com",
@@ -137,6 +203,7 @@ const registerSede = async (sede, dni) => {
             rejectUnauthorizedL: false,
         }
     });
+<<<<<<< HEAD
 
     await client.connect();
 
@@ -144,10 +211,15 @@ const registerSede = async (sede, dni) => {
         nombre_sede, abreviacion, direccion, fecha_creacion, fecha_modificacion, estado, usuario_modificacion)
         VALUES ('${sede.nombreSede}', '${sede.abreviacion}', '${sede.direccion}', CURRENT_DATE, CURRENT_DATE, 'A', ${dni}) RETURNING true as res;`);
 
+=======
+    await client.connect();
+    const res = await client.query(`SELECT public.registrar_membresia('${detail}', '${cost}', '${name}', '${user}')`);
+>>>>>>> origin/Backend-Nicole
     const result = res.rows[0];
 
     await client.end();
 
+<<<<<<< HEAD
     console.log("result = ", result)
 
     return result;
@@ -155,6 +227,13 @@ const registerSede = async (sede, dni) => {
 
 const getSedesList = async () => {
 
+=======
+    return result;
+
+}
+
+const getMemberships = async () => {
+>>>>>>> origin/Backend-Nicole
     const client = new Client({
         user: "omodygym_user",
         host: "dpg-cocr9amv3ddc739ki7b0-a.oregon-postgres.render.com",
@@ -165,6 +244,7 @@ const getSedesList = async () => {
             rejectUnauthorizedL: false,
         }
     });
+<<<<<<< HEAD
 
     await client.connect();
 
@@ -188,6 +268,21 @@ const getSedesList = async () => {
 
 const getColaboradoresList = async () => {
 
+=======
+    await client.connect();
+    const result = await  client.query(`SELECT id_membresia, nombre, detalle_membresia, estado FROM MEMBRESIA WHERE estado = 'A';`);
+    const membresias = result.rows.map(row => ({
+        Id: row.id_membresia,
+        nombre: row.nombre,
+        detalle: row.detalle_membresia,
+        estado: row.estado
+    }));
+    await client.end();
+    return membresias;
+}
+
+const getInactiveMemberships = async () => {
+>>>>>>> origin/Backend-Nicole
     const client = new Client({
         user: "omodygym_user",
         host: "dpg-cocr9amv3ddc739ki7b0-a.oregon-postgres.render.com",
@@ -198,6 +293,7 @@ const getColaboradoresList = async () => {
             rejectUnauthorizedL: false,
         }
     });
+<<<<<<< HEAD
 
     await client.connect();
 
@@ -230,4 +326,92 @@ const getColaboradoresList = async () => {
     await client.end();
 
     return colaboradores;
+=======
+    await client.connect();
+    const result = await  client.query(`SELECT id_membresia, nombre, detalle_membresia, estado FROM MEMBRESIA WHERE estado = 'I';`);
+    const membresias = result.rows.map(row => ({
+        Id: row.id_membresia,
+        nombre: row.nombre,
+        detalle: row.detalle_membresia,
+        estado: row.estado
+    }));
+    await client.end();
+    return membresias;
+}
+
+const updateMembershipStatus = async (id) => {
+    const client = new Client({
+        user: "omodygym_user",
+        host: "dpg-cocr9amv3ddc739ki7b0-a.oregon-postgres.render.com",
+        database: "omodygym",
+        password: "9sAnVEwzwYzR1GMdsET5UQo7XzYjcrup",
+        port: 5432,
+        ssl: {
+            rejectUnauthorizedL: false,
+        }
+    });
+    await client.connect();
+    const res = await client.query(`SELECT public.actualizar_estado_membresia('${id}')`);
+    const result = res.rows[0];
+    await client.end();
+    return result;
+
+}
+
+
+const getClients = async () => {
+    const client = new Client({
+        user: "omodygym_user",
+        host: "dpg-cocr9amv3ddc739ki7b0-a.oregon-postgres.render.com",
+        database: "omodygym",
+        password: "9sAnVEwzwYzR1GMdsET5UQo7XzYjcrup",
+        port: 5432,
+        ssl: {
+            rejectUnauthorizedL: false,
+        }
+    });
+    await client.connect();
+    const result = await  client.query(`SELECT A.id_persona, A.nombre_1, A.apellido_1, A.apellido_2, EXTRACT(YEAR FROM AGE(fecha_nacimiento)) AS edad, a.telefono, d.nombre_sede, e.nombre as membresia, b.fecha_fin  FROM persona a INNER JOIN CONTRATO b ON a.ID_PERSONA = b.ID_PERSONA INNER JOIN TIPO_PERSONA c ON b.ID_TIPO_PERSONA = c.ID_TIPO_PERSONA INNER JOIN SEDE d ON b.ID_SEDE = d.ID_SEDE INNER JOIN MEMBRESIA e ON b.ID_MEMBRESIA = e.ID_MEMBRESIA WHERE c.TIPO_PERSONA = 'C' AND a.ESTADO = 'A';`);
+    const clientes = result.rows.map(row => ({
+        Id: row.id_persona,
+        nombre: row.nombre_1,
+        apellido1: row.apellido_1,
+        apellido2: row.apellido_2,
+        edad: row.edad,
+        telefono: row.telefono,
+        sede: row.nombre_sede,
+        membresia: row.membresia,
+        fechafin: row.fecha_fin
+    }));
+    await client.end();
+    return clientes;
+}
+
+const getClientsFiltered = async (input) => {
+    const client = new Client({
+        user: "omodygym_user",
+        host: "dpg-cocr9amv3ddc739ki7b0-a.oregon-postgres.render.com",
+        database: "omodygym",
+        password: "9sAnVEwzwYzR1GMdsET5UQo7XzYjcrup",
+        port: 5432,
+        ssl: {
+            rejectUnauthorizedL: false,
+        }
+    });
+    await client.connect();
+    const result = await  client.query(`SELECT A.id_persona, A.nombre_1, A.apellido_1, A.apellido_2, EXTRACT(YEAR FROM AGE(fecha_nacimiento)) AS edad, a.telefono, d.nombre_sede, e.nombre as membresia, b.fecha_fin  FROM persona a INNER JOIN CONTRATO b ON a.ID_PERSONA = b.ID_PERSONA INNER JOIN TIPO_PERSONA c ON b.ID_TIPO_PERSONA = c.ID_TIPO_PERSONA INNER JOIN SEDE d ON b.ID_SEDE = d.ID_SEDE INNER JOIN MEMBRESIA e ON b.ID_MEMBRESIA = e.ID_MEMBRESIA WHERE  a.ESTADO = 'A' AND (a.nombre_1 like '%${input}%' || a.apellido_1 like '%${input}%' || a.apellido_2 like '%${input}%' || a.numero_documento_identidad like '%${input}%') ;`);
+    const clientes = result.rows.map(row => ({
+        Id: row.id_persona,
+        nombre: row.nombre_1,
+        apellido1: row.apellido_1,
+        apellido2: row.apellido_2,
+        edad: row.edad,
+        telefono: row.telefono,
+        sede: row.nombre_sede,
+        membresia: row.membresia,
+        fechafin: row.fecha_fin
+    }));
+    await client.end();
+    return clientes;
+>>>>>>> origin/Backend-Nicole
 }
