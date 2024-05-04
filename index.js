@@ -49,9 +49,40 @@ app.post('/createMembership/:detalle/:costo/:nombre/:usuario', (req, res) => {
             res.send(result.res);
         })
 });
+
+app.post('/getMemberships', (req, res) => {
+    getMemberships().then((result) => {
+        res.send(result);
+    }).catch((error) => {
+        console.error("Error al obtener las membresías:", error);
+    });
+
+  
+    
+
+});
+
+app.post('/getInactiveMemberships', (req, res) => {
+    getInactiveMemberships().then((result) => {
+        res.send(result);
+    }).catch((error) => {
+        console.error("Error al obtener las membresías:", error);
+    });
+});
+
+app.post('/updateMembershipStatus/:id', (req, res) => {
+    const idM = req.params.id;
+    updateMembershipStatus(idM).then((result) => {
+        res.send(result);
+    }).catch((error) => {
+        console.error("Error al obtener las membresías:", error);
+    } )
+})
 app.listen(port, () => {
     console.log(`Example app listening on port ${port}`)
 })
+
+
 
 
 //-----------------------------Funciones----------------------------
@@ -125,6 +156,71 @@ const createMembership = async (detail, cost, name, user) => {
 
     await client.end();
 
+    return result;
+
+}
+
+const getMemberships = async () => {
+    const client = new Client({
+        user: "omodygym_user",
+        host: "dpg-cocr9amv3ddc739ki7b0-a.oregon-postgres.render.com",
+        database: "omodygym",
+        password: "9sAnVEwzwYzR1GMdsET5UQo7XzYjcrup",
+        port: 5432,
+        ssl: {
+            rejectUnauthorizedL: false,
+        }
+    });
+    await client.connect();
+    const result = await  client.query(`SELECT id_membresia, nombre, detalle_membresia, estado FROM MEMBRESIA WHERE estado = 'A';`);
+    const membresias = result.rows.map(row => ({
+        Id: row.id_membresia,
+        nombre: row.nombre,
+        detalle: row.detalle_membresia,
+        estado: row.estado
+    }));
+    await client.end();
+    return membresias;
+}
+
+const getInactiveMemberships = async () => {
+    const client = new Client({
+        user: "omodygym_user",
+        host: "dpg-cocr9amv3ddc739ki7b0-a.oregon-postgres.render.com",
+        database: "omodygym",
+        password: "9sAnVEwzwYzR1GMdsET5UQo7XzYjcrup",
+        port: 5432,
+        ssl: {
+            rejectUnauthorizedL: false,
+        }
+    });
+    await client.connect();
+    const result = await  client.query(`SELECT id_membresia, nombre, detalle_membresia, estado FROM MEMBRESIA WHERE estado = 'I';`);
+    const membresias = result.rows.map(row => ({
+        Id: row.id_membresia,
+        nombre: row.nombre,
+        detalle: row.detalle_membresia,
+        estado: row.estado
+    }));
+    await client.end();
+    return membresias;
+}
+
+const updateMembershipStatus = async (id) => {
+    const client = new Client({
+        user: "omodygym_user",
+        host: "dpg-cocr9amv3ddc739ki7b0-a.oregon-postgres.render.com",
+        database: "omodygym",
+        password: "9sAnVEwzwYzR1GMdsET5UQo7XzYjcrup",
+        port: 5432,
+        ssl: {
+            rejectUnauthorizedL: false,
+        }
+    });
+    await client.connect();
+    const res = await client.query(`SELECT public.actualizar_estado_membresia('${id}')`);
+    const result = res.rows[0];
+    await client.end();
     return result;
 
 }
