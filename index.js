@@ -38,17 +38,15 @@ app.post('/reset/:user/:password', (req, res) => {
         })
 });
 
-app.post('/membership/:detalle/:costo/:nombre/:usuario', (req, res) => {
-
+app.post('/createMembership/:detalle/:costo/:nombre/:usuario', (req, res) => {
     const detail = req.params.detalle;
     const cost = req.params.costo;
-    const number = req.params.nombre;
+    const name = req.params.nombre;
     const user = req.params.usuario;
 
-    createMembership(detail, cost, number, user)
+    createMembership(detail, cost, name, user)
         .then((result) => {
-            console.log(JSON.stringify(result.registrar_membresia));
-            res.json(JSON.stringify(result.registrar_membresia));
+            res.send(result.res);
         })
 });
 app.listen(port, () => {
@@ -111,7 +109,6 @@ const resetPassword = async (user, password) => {
 
 
 const createMembership = async (detail, cost, name, user) => {
-
     const client = new Client({
         user: "omodygym_user",
         host: "dpg-cocr9amv3ddc739ki7b0-a.oregon-postgres.render.com",
@@ -122,11 +119,8 @@ const createMembership = async (detail, cost, name, user) => {
             rejectUnauthorizedL: false,
         }
     });
-
     await client.connect();
-
-    const res = await client.query(`public.registrar_membresia('${detail}', '${cost}', '${name}', '${user}')`);
-
+    const res = await client.query(`SELECT public.registrar_membresia('${detail}', '${cost}', '${name}', '${user}')`);
     const result = res.rows[0];
 
     await client.end();
