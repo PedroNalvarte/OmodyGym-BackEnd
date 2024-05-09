@@ -38,6 +38,107 @@ app.post('/reset/:user/:password', (req, res) => {
         })
 });
 
+app.post('/registerSede/:dni', (req, res) => {
+
+    registerSede(req.body, req.params.dni)
+        .then((result) => {
+
+            res.send(result.res);
+
+        })
+});
+
+app.post('/listSedes', (req, res) => {
+
+    getSedesList()
+        .then((result) => {
+            res.send(result);
+        })
+});
+
+app.post('/listColaboradores', (req, res) => {
+
+    getColaboradoresList()
+        .then((result) => {
+            res.send(result);
+        })
+});
+
+app.post('/createMembership/:detalle/:costo/:nombre/:usuario', (req, res) => {
+    const detail = req.params.detalle;
+    const cost = req.params.costo;
+    const name = req.params.nombre;
+    const user = req.params.usuario;
+
+    createMembership(detail, cost, name, user)
+        .then((result) => {
+            res.send(result.res);
+        })
+});
+
+app.post('/createClient/:nombre/:apellido1/:apellido2/:sede/:membresia/:dni/:fechanac/:telefono/:usuario', (req, res) => {
+    const nombre = req.params.nombre;
+    const apellido1 = req.params.apellido1;
+    const apellido2 = req.params.apellido2;
+    const sede = req.params.sede;
+    const membresia = req.params.membresia;
+    const dni = req.params.fechanac;
+    const fecha_nacimiento = req.params.fechanac;
+    const telefono = req.params.telefono;
+    const user = req.params.usuario;
+
+    createClient(nombre, apellido1, apellido2, sede, membresia, dni, fecha_nacimiento, telefono, user)
+        .then((result) => {
+            res.send(result.res);
+        })
+});
+
+app.post('/getClients', (req, res) => {
+    getClients().then((result) => {
+        res.send(result);
+    }).catch((error) => {
+        console.error("Error al obtener las membresías:", error);
+    });
+
+});
+
+app.post('/getMemberships', (req, res) => {
+    getMemberships().then((result) => {
+        res.send(result);
+    }).catch((error) => {
+        console.error("Error al obtener las membresías:", error);
+    });
+
+});
+
+app.post('/getInactiveMemberships', (req, res) => {
+    getInactiveMemberships().then((result) => {
+        res.send(result);
+    }).catch((error) => {
+        console.error("Error al obtener las membresías:", error);
+    });
+});
+
+app.post('/updateMembershipStatus/:id', (req, res) => {
+    const idM = req.params.id;
+    updateMembershipStatus(idM).then((result) => {
+        res.send(result);
+    }).catch((error) => {
+        console.error("Error al obtener las membresías:", error);
+    })
+})
+
+app.post('/registerColaborador', (req, res) => {
+
+    registerColaborator(req.body)
+        .then((result) => {
+            res.send(result.res);
+        })
+
+
+})
+
+
 app.post('/createMembership/:detalle/:costo/:nombre/:usuario', (req, res) => {
     const detail = req.params.detalle;
     const cost = req.params.costo;
@@ -73,8 +174,8 @@ app.post('/getMemberships', (req, res) => {
         console.error("Error al obtener las membresías:", error);
     });
 
-  
-    
+
+
 
 });
 
@@ -92,7 +193,7 @@ app.post('/updateMembershipStatus/:id', (req, res) => {
         res.send(result);
     }).catch((error) => {
         console.error("Error al obtener las membresías:", error);
-    } )
+    })
 })
 app.listen(port, () => {
     console.log(`Example app listening on port ${port}`)
@@ -188,7 +289,7 @@ const getMemberships = async () => {
         }
     });
     await client.connect();
-    const result = await  client.query(`SELECT id_membresia, nombre, detalle_membresia, estado FROM MEMBRESIA WHERE estado = 'A';`);
+    const result = await client.query(`SELECT id_membresia, nombre, detalle_membresia, estado FROM MEMBRESIA WHERE estado = 'A';`);
     const membresias = result.rows.map(row => ({
         Id: row.id_membresia,
         nombre: row.nombre,
@@ -211,7 +312,7 @@ const getInactiveMemberships = async () => {
         }
     });
     await client.connect();
-    const result = await  client.query(`SELECT id_membresia, nombre, detalle_membresia, estado FROM MEMBRESIA WHERE estado = 'I';`);
+    const result = await client.query(`SELECT id_membresia, nombre, detalle_membresia, estado FROM MEMBRESIA WHERE estado = 'I';`);
     const membresias = result.rows.map(row => ({
         Id: row.id_membresia,
         nombre: row.nombre,
@@ -254,7 +355,7 @@ const getClients = async () => {
         }
     });
     await client.connect();
-    const result = await  client.query(`SELECT A.id_persona, A.nombre_1, A.apellido_1, A.apellido_2, EXTRACT(YEAR FROM AGE(fecha_nacimiento)) AS edad, a.telefono, d.nombre_sede, e.nombre as membresia, b.fecha_fin  FROM persona a INNER JOIN CONTRATO b ON a.ID_PERSONA = b.ID_PERSONA INNER JOIN TIPO_PERSONA c ON b.ID_TIPO_PERSONA = c.ID_TIPO_PERSONA INNER JOIN SEDE d ON b.ID_SEDE = d.ID_SEDE INNER JOIN MEMBRESIA e ON b.ID_MEMBRESIA = e.ID_MEMBRESIA WHERE c.TIPO_PERSONA = 'C' AND a.ESTADO = 'A';`);
+    const result = await client.query(`SELECT A.id_persona, A.nombre_1, A.apellido_1, A.apellido_2, EXTRACT(YEAR FROM AGE(fecha_nacimiento)) AS edad, a.telefono, d.nombre_sede, e.nombre as membresia, b.fecha_fin  FROM persona a INNER JOIN CONTRATO b ON a.ID_PERSONA = b.ID_PERSONA INNER JOIN TIPO_PERSONA c ON b.ID_TIPO_PERSONA = c.ID_TIPO_PERSONA INNER JOIN SEDE d ON b.ID_SEDE = d.ID_SEDE INNER JOIN MEMBRESIA e ON b.ID_MEMBRESIA = e.ID_MEMBRESIA WHERE c.TIPO_PERSONA = 'C' AND a.ESTADO = 'A';`);
     const clientes = result.rows.map(row => ({
         Id: row.id_persona,
         nombre: row.nombre_1,
@@ -282,7 +383,7 @@ const getClientsFiltered = async (input) => {
         }
     });
     await client.connect();
-    const result = await  client.query(`SELECT A.id_persona, A.nombre_1, A.apellido_1, A.apellido_2, EXTRACT(YEAR FROM AGE(fecha_nacimiento)) AS edad, a.telefono, d.nombre_sede, e.nombre as membresia, b.fecha_fin  FROM persona a INNER JOIN CONTRATO b ON a.ID_PERSONA = b.ID_PERSONA INNER JOIN TIPO_PERSONA c ON b.ID_TIPO_PERSONA = c.ID_TIPO_PERSONA INNER JOIN SEDE d ON b.ID_SEDE = d.ID_SEDE INNER JOIN MEMBRESIA e ON b.ID_MEMBRESIA = e.ID_MEMBRESIA WHERE  a.ESTADO = 'A' AND (a.nombre_1 like '%${input}%' || a.apellido_1 like '%${input}%' || a.apellido_2 like '%${input}%' || a.numero_documento_identidad like '%${input}%') ;`);
+    const result = await client.query(`SELECT A.id_persona, A.nombre_1, A.apellido_1, A.apellido_2, EXTRACT(YEAR FROM AGE(fecha_nacimiento)) AS edad, a.telefono, d.nombre_sede, e.nombre as membresia, b.fecha_fin  FROM persona a INNER JOIN CONTRATO b ON a.ID_PERSONA = b.ID_PERSONA INNER JOIN TIPO_PERSONA c ON b.ID_TIPO_PERSONA = c.ID_TIPO_PERSONA INNER JOIN SEDE d ON b.ID_SEDE = d.ID_SEDE INNER JOIN MEMBRESIA e ON b.ID_MEMBRESIA = e.ID_MEMBRESIA WHERE  a.ESTADO = 'A' AND (a.nombre_1 like '%${input}%' || a.apellido_1 like '%${input}%' || a.apellido_2 like '%${input}%' || a.numero_documento_identidad like '%${input}%') ;`);
     const clientes = result.rows.map(row => ({
         Id: row.id_persona,
         nombre: row.nombre_1,
