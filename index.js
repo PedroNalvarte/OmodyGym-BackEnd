@@ -138,7 +138,6 @@ app.post('/registerColaborador', (req, res) => {
 
 })
 
-
 app.post('/createMembership/:detalle/:costo/:nombre/:usuario', (req, res) => {
     const detail = req.params.detalle;
     const cost = req.params.costo;
@@ -150,6 +149,7 @@ app.post('/createMembership/:detalle/:costo/:nombre/:usuario', (req, res) => {
             res.send(result.res);
         })
 });
+
 app.post('/getClients', (req, res) => {
     getClients().then((result) => {
         res.send(result);
@@ -173,9 +173,6 @@ app.post('/getMemberships', (req, res) => {
     }).catch((error) => {
         console.error("Error al obtener las membresías:", error);
     });
-
-
-
 
 });
 
