@@ -352,7 +352,7 @@ const getClients = async () => {
         }
     });
     await client.connect();
-    const result = await client.query(`SELECT A.id_persona, A.nombre_1, A.apellido_1, A.apellido_2, EXTRACT(YEAR FROM AGE(fecha_nacimiento)) AS edad, a.telefono, d.nombre_sede, e.nombre as membresia, b.fecha_fin, a.numero_documento_identidad  FROM persona a INNER JOIN CONTRATO b ON a.ID_PERSONA = b.ID_PERSONA INNER JOIN TIPO_PERSONA c ON b.ID_TIPO_PERSONA = c.ID_TIPO_PERSONA INNER JOIN SEDE d ON b.ID_SEDE = d.ID_SEDE INNER JOIN MEMBRESIA e ON b.ID_MEMBRESIA = e.ID_MEMBRESIA WHERE c.TIPO_PERSONA = 'C' AND a.ESTADO = 'A';`);
+    const result = await client.query(`SELECT A.id_persona, A.nombre_1, A.apellido_1, A.apellido_2, EXTRACT(YEAR FROM AGE(fecha_nacimiento)) AS edad, a.telefono, d.nombre_sede, e.nombre as membresia, b.fecha_fin, a.numero_documento_identidad as dni FROM persona a INNER JOIN CONTRATO b ON a.ID_PERSONA = b.ID_PERSONA INNER JOIN TIPO_PERSONA c ON b.ID_TIPO_PERSONA = c.ID_TIPO_PERSONA INNER JOIN SEDE d ON b.ID_SEDE = d.ID_SEDE INNER JOIN MEMBRESIA e ON b.ID_MEMBRESIA = e.ID_MEMBRESIA WHERE c.TIPO_PERSONA = 'C' AND a.ESTADO = 'A';`);
     const clientes = result.rows.map(row => ({
         Id: row.id_persona,
         nombre: row.nombre_1,
@@ -362,7 +362,8 @@ const getClients = async () => {
         telefono: row.telefono,
         sede: row.nombre_sede,
         membresia: row.membresia,
-        fechafin: row.fecha_fin
+        fechafin: row.fecha_fin,
+        dni: row.dni
     }));
     await client.end();
     return clientes;
