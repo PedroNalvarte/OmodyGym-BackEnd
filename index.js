@@ -503,3 +503,37 @@ const getColaboradoresList = async () => {
 
     return colaboradores;
 }
+
+const registerColaborator = async (body) => {
+    const client = new Client({
+        user: "omodygym_user",
+        host: "dpg-cocr9amv3ddc739ki7b0-a.oregon-postgres.render.com",
+        database: "omodygym",
+        password: "9sAnVEwzwYzR1GMdsET5UQo7XzYjcrup",
+        port: 5432,
+        ssl: {
+            rejectUnauthorizedL: false,
+        }
+    });
+    await client.connect();
+    const result = await client.query(`
+    SELECT public.registrar_colaborador(
+        '${body.nombre_1}'::text,          
+        '${body.nombre_2}'::text,          
+        '${body.apellido_1}'::text,          
+        '${body.apellido_2}'::text,          
+        '${body.fecha_nacimiento}'::text,        
+        '${body.correo}'::text, 
+        '${body.sexo}'::text,                 
+        '${body.telefono}'::text,         
+        '${body.numero_documento_identidad}'::text,          
+        '${body.id_tipo_persona}'::text,                
+        '${body.idSede}'::text                  
+    );
+    `);
+    const clientes = result.rows.map(row => ({
+
+    }));
+    await client.end();
+    return clientes;
+}
