@@ -196,6 +196,16 @@ app.listen(port, () => {
     console.log(`Example app listening on port ${port}`)
 })
 
+app.post('/listEjercicios', (req, res) => {
+
+    getEjerciciosList()
+        .then((result) => {
+            res.send(result);
+        })
+});
+
+
+
 
 
 
@@ -537,4 +547,39 @@ const registerColaborator = async (body) => {
     }));
     await client.end();
     return clientes;
+}
+
+const getEjerciciosList = async () => {
+
+    const client = new Client({
+        user: "omodygym_user",
+        host: "dpg-cocr9amv3ddc739ki7b0-a.oregon-postgres.render.com",
+        database: "omodygym",
+        password: "9sAnVEwzwYzR1GMdsET5UQo7XzYjcrup",
+        port: 5432,
+        ssl: {
+            rejectUnauthorizedL: false,
+        }
+    });
+
+    await client.connect();
+
+    const res = await client.query(`
+        SELECT e.id_ejercicio, e.id_grupo_muscular, gm.nombre_grupo_muscular, e.nombre, e.imagen
+            FROM ejercicios e
+            INNER JOIN grupo_muscular gm on e.id_grupo_muscular = gm.id_grupo_muscular
+        WHERE e.estado = 'A'
+    `);
+
+    const ejercicios = res.rows.map(row => ({
+        id_ejercicio: row.id_ejercicio,
+        id_grupo_muscular: row.id_grupo_muscular,
+        nombre_grupo_muscular: row.nombre_grupo_muscular,
+        nombre: row.nombre,
+        imagen: row.imagen,
+    }));
+
+    await client.end();
+
+    return ejercicios;
 }
