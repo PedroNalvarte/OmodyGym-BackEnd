@@ -135,7 +135,6 @@ app.post('/registerColaborador', (req, res) => {
             res.send(result.res);
         })
 
-
 })
 
 app.post('/createMembership/:detalle/:costo/:nombre/:usuario', (req, res) => {
@@ -203,6 +202,25 @@ app.post('/listEjercicios', (req, res) => {
             res.send(result);
         })
 });
+
+app.post('/listGrupoMuscular', (req, res) => {
+
+    getGrupoMuscularList()
+        .then((result) => {
+            res.send(result);
+        })
+});
+
+app.post('/registerEjercicio', (req, res) => {
+
+    registerEjercicio(req.body)
+        .then((result) => {
+            res.send(result.res);
+        })
+
+})
+
+
 
 
 
@@ -582,4 +600,61 @@ const getEjerciciosList = async () => {
     await client.end();
 
     return ejercicios;
+}
+
+const getGrupoMuscularList = async () => {
+
+    const client = new Client({
+        user: "omodygym_user",
+        host: "dpg-cocr9amv3ddc739ki7b0-a.oregon-postgres.render.com",
+        database: "omodygym",
+        password: "9sAnVEwzwYzR1GMdsET5UQo7XzYjcrup",
+        port: 5432,
+        ssl: {
+            rejectUnauthorizedL: false,
+        }
+    });
+
+    await client.connect();
+
+    const res = await client.query(`
+        select id_grupo_muscular, nombre_grupo_muscular, fecha_creacion from grupo_muscular
+        where estado = 'A'
+    `);
+
+    const grupoMuscular = res.rows.map(row => ({
+        id_grupo_muscular: row.id_grupo_muscular,
+        nombre_grupo_muscular: row.nombre_grupo_muscular,
+        fecha_creacion: row.fecha_creacion,
+    }));
+
+    await client.end();
+
+    return grupoMuscular;
+}
+
+const registerEjercicio = async (body) => {
+
+    const client = new Client({
+        user: "omodygym_user",
+        host: "dpg-cocr9amv3ddc739ki7b0-a.oregon-postgres.render.com",
+        database: "omodygym",
+        password: "9sAnVEwzwYzR1GMdsET5UQo7XzYjcrup",
+        port: 5432,
+        ssl: {
+            rejectUnauthorizedL: false,
+        }
+    });
+    await client.connect();
+
+    const result = await client.query(`
+        INSERT INTO public.ejercicios(
+        id_grupo_muscular, nombre, imagen, fecha_creacion, fecha_modificacion, estado, usuario_modificacion)
+        VALUES (${body.id_grupo_muscular}, '${body.nombre}', '${body.imagen}', CURRENT_DATE, CURRENT_DATE, 'A', 1);
+    `);
+    const clientes = result.rows.map(row => ({
+
+    }));
+    await client.end();
+    return clientes;
 }
