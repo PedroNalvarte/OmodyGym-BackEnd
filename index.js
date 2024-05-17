@@ -392,8 +392,24 @@ const getClients = async (id) => {
         result = await client.query(`SELECT A.id_persona, A.nombre_1, A.apellido_1, A.apellido_2, EXTRACT(YEAR FROM AGE(a.fecha_nacimiento)) AS edad, a.fecha_nacimiento, a.telefono, d.nombre_sede, e.nombre as membresia, b.fecha_fin, a.numero_documento_identidad as dni,
         TO_CHAR( f.fecha_modificacion , 'DD/MM/YYYY') as modificacion_plan,
         TO_CHAR( g.fecha_modificacion , 'DD/MM/YYYY') as modificacion_metricas,
-        h.nombre_1 || ' ' || h.apellido_1 as entrenador FROM persona a INNER JOIN CONTRATO b ON a.ID_PERSONA = b.ID_PERSONA INNER JOIN TIPO_PERSONA c ON b.ID_TIPO_PERSONA = c.ID_TIPO_PERSONA INNER JOIN SEDE d ON b.ID_SEDE = d.ID_SEDE INNER JOIN MEMBRESIA e ON b.ID_MEMBRESIA = e.ID_MEMBRESIA LEFT JOIN PLAN_ENTRENAMIENTO f ON a.ID_PERSONA = f.ID_PERSONA
-        LEFT JOIN PROGRESO g ON a.ID_PERSONA = g.ID_PERSONA
+        h.nombre_1 || ' ' || h.apellido_1 as entrenador FROM persona a INNER JOIN CONTRATO b ON a.ID_PERSONA = b.ID_PERSONA INNER JOIN TIPO_PERSONA c ON b.ID_TIPO_PERSONA = c.ID_TIPO_PERSONA INNER JOIN SEDE d ON b.ID_SEDE = d.ID_SEDE INNER JOIN MEMBRESIA e ON b.ID_MEMBRESIA = e.ID_MEMBRESIA LEFT JOIN (
+            SELECT p.*
+            FROM PLAN_ENTRENAMIENTO p
+            INNER JOIN (
+                SELECT ID_PERSONA, MAX(fecha_modificacion) AS max_fecha
+                FROM PLAN_ENTRENAMIENTO
+                GROUP BY ID_PERSONA
+            ) pm ON p.ID_PERSONA = pm.ID_PERSONA AND p.fecha_modificacion = pm.max_fecha  LIMIT 1
+        ) f ON a.ID_PERSONA = f.ID_PERSONA
+        LEFT JOIN (
+            SELECT pr.*
+            FROM PROGRESO pr
+            INNER JOIN (
+                SELECT ID_PERSONA, MAX(fecha_modificacion) AS max_fecha
+                FROM PROGRESO
+                GROUP BY ID_PERSONA
+            ) prm ON pr.ID_PERSONA = prm.ID_PERSONA AND pr.fecha_modificacion = prm.max_fecha  LIMIT 1
+        ) g ON a.ID_PERSONA = g.ID_PERSONA
         LEFT JOIN PERSONA h ON a.ID_ENTRENADOR = h.ID_PERSONA
         WHERE c.TIPO_PERSONA = 'C' AND a.ESTADO = 'A' AND (a.ID_ENTRENADOR is NULL OR a.ID_ENTRENADOR = ${idUsuario});`);
     }
@@ -403,8 +419,24 @@ const getClients = async (id) => {
         TO_CHAR( g.fecha_modificacion , 'DD/MM/YYYY') as modificacion_metricas, 
         h.nombre_1 || ' ' || h.apellido_1 as entrenador
         FROM persona a
-        INNER JOIN CONTRATO b ON a.ID_PERSONA = b.ID_PERSONA INNER JOIN TIPO_PERSONA c ON b.ID_TIPO_PERSONA = c.ID_TIPO_PERSONA INNER JOIN SEDE d ON b.ID_SEDE = d.ID_SEDE INNER JOIN MEMBRESIA e ON b.ID_MEMBRESIA = e.ID_MEMBRESIA LEFT JOIN PLAN_ENTRENAMIENTO f ON a.ID_PERSONA = f.ID_PERSONA
-        LEFT JOIN PROGRESO g ON a.ID_PERSONA = g.ID_PERSONA
+        INNER JOIN CONTRATO b ON a.ID_PERSONA = b.ID_PERSONA INNER JOIN TIPO_PERSONA c ON b.ID_TIPO_PERSONA = c.ID_TIPO_PERSONA INNER JOIN SEDE d ON b.ID_SEDE = d.ID_SEDE INNER JOIN MEMBRESIA e ON b.ID_MEMBRESIA = e.ID_MEMBRESIA LEFT JOIN (
+            SELECT p.*
+            FROM PLAN_ENTRENAMIENTO p
+            INNER JOIN (
+                SELECT ID_PERSONA, MAX(fecha_modificacion) AS max_fecha
+                FROM PLAN_ENTRENAMIENTO
+                GROUP BY ID_PERSONA
+            ) pm ON p.ID_PERSONA = pm.ID_PERSONA AND p.fecha_modificacion = pm.max_fecha  LIMIT 1
+        ) f ON a.ID_PERSONA = f.ID_PERSONA
+        LEFT JOIN (
+            SELECT pr.*
+            FROM PROGRESO pr
+            INNER JOIN (
+                SELECT ID_PERSONA, MAX(fecha_modificacion) AS max_fecha
+                FROM PROGRESO
+                GROUP BY ID_PERSONA
+            ) prm ON pr.ID_PERSONA = prm.ID_PERSONA AND pr.fecha_modificacion = prm.max_fecha  LIMIT 1
+        ) g ON a.ID_PERSONA = g.ID_PERSONA
         LEFT JOIN PERSONA h ON a.ID_ENTRENADOR = h.ID_PERSONA
         WHERE c.TIPO_PERSONA = 'C' AND a.ESTADO = 'A'`);
     }
