@@ -384,12 +384,32 @@ const getClients = async (id) => {
     });
     await client.connect();
 
-    const idUsuarioResult = await client.query(`SELECT A.id_persona FROM PERSONA a WHERE a.numero_documento_identidad = '${id}'`);
-    const idUsuario = idUsuarioResult.rows[0].id_persona;
-    const result = await client.query(`SELECT A.id_persona, A.nombre_1, A.apellido_1, A.apellido_2, EXTRACT(YEAR FROM AGE(fecha_nacimiento)) AS edad, a.fecha_nacimiento, a.telefono, d.nombre_sede, e.nombre as membresia, b.fecha_fin, a.numero_documento_identidad as dni,
-	TO_CHAR( f.fecha_modificacion , 'DD/MM/YYYY') as modificacion_plan,
-	TO_CHAR( g.fecha_modificacion , 'DD/MM/YYYY') as modificacion_metricas FROM persona a INNER JOIN CONTRATO b ON a.ID_PERSONA = b.ID_PERSONA INNER JOIN TIPO_PERSONA c ON b.ID_TIPO_PERSONA = c.ID_TIPO_PERSONA INNER JOIN SEDE d ON b.ID_SEDE = d.ID_SEDE INNER JOIN MEMBRESIA e ON b.ID_MEMBRESIA = e.ID_MEMBRESIA LEFT JOIN PLAN_ENTRENAMIENTO f ON a.ID_PERSONA = f.ID_PERSONA
-	LEFT JOIN PROGRESO g ON a.ID_PERSONA = g.ID_PERSONA WHERE c.TIPO_PERSONA = 'C' AND a.ESTADO = 'A' AND (a.ID_ENTRENADOR is NULL OR a.ID_ENTRENADOR = ${idUsuario});`);
+   
+    var result;
+    if(id != undefined){
+        const idUsuarioResult = await client.query(`SELECT A.id_persona FROM PERSONA a WHERE a.numero_documento_identidad = '${id}'`);
+        const idUsuario = idUsuarioResult.rows[0].id_persona;
+        result = await client.query(`SELECT A.id_persona, A.nombre_1, A.apellido_1, A.apellido_2, EXTRACT(YEAR FROM AGE(a.fecha_nacimiento)) AS edad, a.fecha_nacimiento, a.telefono, d.nombre_sede, e.nombre as membresia, b.fecha_fin, a.numero_documento_identidad as dni,
+        TO_CHAR( f.fecha_modificacion , 'DD/MM/YYYY') as modificacion_plan,
+        TO_CHAR( g.fecha_modificacion , 'DD/MM/YYYY') as modificacion_metricas,
+        h.nombre_1 || ' ' || h.apellido_1 as entrenador FROM persona a INNER JOIN CONTRATO b ON a.ID_PERSONA = b.ID_PERSONA INNER JOIN TIPO_PERSONA c ON b.ID_TIPO_PERSONA = c.ID_TIPO_PERSONA INNER JOIN SEDE d ON b.ID_SEDE = d.ID_SEDE INNER JOIN MEMBRESIA e ON b.ID_MEMBRESIA = e.ID_MEMBRESIA LEFT JOIN PLAN_ENTRENAMIENTO f ON a.ID_PERSONA = f.ID_PERSONA
+        LEFT JOIN PROGRESO g ON a.ID_PERSONA = g.ID_PERSONA
+        LEFT JOIN PERSONA h ON a.ID_ENTRENADOR = h.ID_PERSONA
+        WHERE c.TIPO_PERSONA = 'C' AND a.ESTADO = 'A' AND (a.ID_ENTRENADOR is NULL OR a.ID_ENTRENADOR = ${idUsuario});`);
+    }
+    else{
+        result = await client.query(`SELECT A.id_persona, A.nombre_1, A.apellido_1, A.apellido_2, EXTRACT(YEAR FROM AGE(a.fecha_nacimiento)) AS edad, a.fecha_nacimiento, a.telefono, d.nombre_sede, e.nombre as membresia, b.fecha_fin, a.numero_documento_identidad as dni,
+        TO_CHAR( f.fecha_modificacion , 'DD/MM/YYYY') as modificacion_plan,
+        TO_CHAR( g.fecha_modificacion , 'DD/MM/YYYY') as modificacion_metricas, 
+        h.nombre_1 || ' ' || h.apellido_1 as entrenador
+        FROM persona a
+        INNER JOIN CONTRATO b ON a.ID_PERSONA = b.ID_PERSONA INNER JOIN TIPO_PERSONA c ON b.ID_TIPO_PERSONA = c.ID_TIPO_PERSONA INNER JOIN SEDE d ON b.ID_SEDE = d.ID_SEDE INNER JOIN MEMBRESIA e ON b.ID_MEMBRESIA = e.ID_MEMBRESIA LEFT JOIN PLAN_ENTRENAMIENTO f ON a.ID_PERSONA = f.ID_PERSONA
+        LEFT JOIN PROGRESO g ON a.ID_PERSONA = g.ID_PERSONA
+        LEFT JOIN PERSONA h ON a.ID_ENTRENADOR = h.ID_PERSONA
+        WHERE c.TIPO_PERSONA = 'C' AND a.ESTADO = 'A'`);
+    }
+    
+    
     const clientes = result.rows.map(row => ({
         Id: row.id_persona,
         nombre: row.nombre_1,
@@ -403,7 +423,8 @@ const getClients = async (id) => {
         dni: row.dni,
         modificacion_metricas: row.modificacion_metricas,
         modificacion_plan: row.modificacion_plan,
-        fecha_nacimiento: row.fecha_nacimiento
+        fecha_nacimiento: row.fecha_nacimiento,
+        entrenador: row.entrenador
 
     }));
     await client.end();
