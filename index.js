@@ -887,3 +887,24 @@ const getMiPlanList = async (dni) => {
 
     return miPlan;
 }
+
+const createClient = async (nombre, apellido1, apellido2, sede, membresia, dni, fecha_nacimiento, telefono, usuario) => {
+    const client = new Client({
+        user: "omodygym_user",
+        host: "dpg-cocr9amv3ddc739ki7b0-a.oregon-postgres.render.com",
+        database: "omodygym",
+        password: "9sAnVEwzwYzR1GMdsET5UQo7XzYjcrup",
+        port: 5432,
+        ssl: {
+            rejectUnauthorizedL: false,
+        }
+    });
+    await client.connect();
+    const res = await client.query(`SELECT public.registrar_cliente('${nombre}', '${apellido1}', '${apellido2}', '${sede}', '${membresia}', '${dni}', '${fecha_nacimiento}', '${telefono}', '${usuario}')`);
+    const result = res.rows[0];
+
+    await client.end();
+
+    return result;
+
+}
