@@ -103,7 +103,6 @@ app.post('/getClients', (req, res) => {
 
 });
 
-
 app.post('/getMemberships', (req, res) => {
     getMemberships().then((result) => {
         res.send(result);
@@ -151,7 +150,6 @@ app.post('/createMembership/:detalle/:costo/:nombre/:usuario', (req, res) => {
         })
 });
 
-
 app.post('/getClientsFiltered/:input', (req, res) => {
     const input = req.params.input;
     getClientsFiltered(input).then((result) => {
@@ -161,6 +159,7 @@ app.post('/getClientsFiltered/:input', (req, res) => {
     });
 
 });
+
 app.post('/getMemberships', (req, res) => {
     getMemberships().then((result) => {
         res.send(result);
@@ -186,6 +185,7 @@ app.post('/updateMembershipStatus/:id', (req, res) => {
         console.error("Error al obtener las membresías:", error);
     })
 })
+
 app.listen(port, () => {
     console.log(`Example app listening on port ${port}`)
 })
@@ -215,7 +215,6 @@ app.post('/registerEjercicio', (req, res) => {
 
 })
 
-
 app.post('/asignTrainer/:idUsuario/:idEntrenador', (req, res) => {
     const idUsuario = req.params.idUsuario;
     const idEntrenador = req.params.idEntrenador;
@@ -225,7 +224,6 @@ app.post('/asignTrainer/:idUsuario/:idEntrenador', (req, res) => {
         console.error("Error al asignar entrenador:", error);
     })
 })
-
 
 app.get('/getLastPlan', async (req, res) => {
     try {
@@ -238,18 +236,27 @@ app.get('/getLastPlan', async (req, res) => {
 })
 
 app.post('/insertTrainingPlan', (req, res) => {
-    try{
+    try {
         registerTrainingPlan(req.body)
-        .then((result) => {
-            res.send(result.res);
-        })
+            .then((result) => {
+                res.send(result.res);
+            })
 
-    } catch (error){
+    } catch (error) {
         console.error(error);
         res.status(500).send('Error al insertar plan');
     }
 })
 
+app.post('/listMiPlan/:id', (req, res) => {
+
+    const id = req.params.id;
+
+    getMiPlanList(id)
+        .then((result) => {
+            res.send(result);
+        })
+});
 
 //-----------------------------Funciones----------------------------
 
@@ -303,7 +310,6 @@ const resetPassword = async (user, password) => {
 
     return result;
 }
-
 
 const createMembership = async (detail, cost, name, user) => {
     const client = new Client({
@@ -391,7 +397,6 @@ const updateMembershipStatus = async (id) => {
 
 }
 
-
 const getClients = async (id) => {
     const client = new Client({
         user: "omodygym_user",
@@ -405,9 +410,9 @@ const getClients = async (id) => {
     });
     await client.connect();
 
-   
+
     var result;
-    if(id != undefined){
+    if (id != undefined) {
         const idUsuarioResult = await client.query(`SELECT A.id_persona FROM PERSONA a WHERE a.numero_documento_identidad = '${id}'`);
         const idUsuario = idUsuarioResult.rows[0].id_persona;
         result = await client.query(`SELECT 
@@ -461,7 +466,7 @@ const getClients = async (id) => {
         AND a.estado = 'A'
      AND (a.ID_ENTRENADOR is NULL OR a.ID_ENTRENADOR = ${idUsuario});`);
     }
-    else{
+    else {
         result = await client.query(`SELECT 
         A.id_persona, 
         A.nombre_1, 
@@ -513,8 +518,8 @@ const getClients = async (id) => {
         AND a.estado = 'A';
     `);
     }
-    
-    
+
+
     const clientes = result.rows.map(row => ({
         Id: row.id_persona,
         nombre: row.nombre_1,
@@ -536,10 +541,6 @@ const getClients = async (id) => {
     await client.end();
     return clientes;
 }
-
-
-
-
 
 const registerSede = async (sede, dni) => {
 
@@ -569,7 +570,7 @@ const registerSede = async (sede, dni) => {
     return result;
 }
 
-const registerTrainingPlan  = async (body) => {
+const registerTrainingPlan = async (body) => {
 
     const client = new Client({
         user: "omodygym_user",
@@ -591,8 +592,8 @@ const registerTrainingPlan  = async (body) => {
     const clientes = result.rows.map(row => ({
 
     }));
-await client.end();
-return clientes;
+    await client.end();
+    return clientes;
 }
 
 const getSedesList = async () => {
@@ -800,7 +801,7 @@ const registerEjercicio = async (body) => {
     return clientes;
 }
 
-const asignarEntrenador = async(usuario, entrenador) => {
+const asignarEntrenador = async (usuario, entrenador) => {
     const client = new Client({
         user: "omodygym_user",
         host: "dpg-cocr9amv3ddc739ki7b0-a.oregon-postgres.render.com",
@@ -820,7 +821,6 @@ const asignarEntrenador = async(usuario, entrenador) => {
     return result;
 }
 
-
 const getLastPlan = async () => {
     const client = new Client({
         user: "omodygym_user",
@@ -839,4 +839,51 @@ const getLastPlan = async () => {
 
     const ultimo_plan = result.rows[0].ultimo_plan_entrenamiento
     return ultimo_plan + 1;
+}
+
+const getMiPlanList = async (id) => {
+
+    const client = new Client({
+        user: "omodygym_user",
+        host: "dpg-cocr9amv3ddc739ki7b0-a.oregon-postgres.render.com",
+        database: "omodygym",
+        password: "9sAnVEwzwYzR1GMdsET5UQo7XzYjcrup",
+        port: 5432,
+        ssl: {
+            rejectUnauthorizedL: false,
+        }
+    });
+
+    await client.connect();
+
+    const res = await client.query(`
+        select pe.id_persona, pe.id_plan_entrenamiento, pe.dia, gm.id_grupo_muscular, gm.nombre_grupo_muscular, pe.id_ejercicio,
+        e.nombre, e.imagen, pe.series, pe.repeticiones 
+        
+        from plan_entrenamiento pe
+
+        inner join ejercicios e on e.id_ejercicio = pe.id_ejercicio
+        inner join grupo_muscular gm on gm.id_grupo_muscular = e.id_grupo_muscular
+        
+        where pe.id_persona = '${id}'
+
+        order by pe.dia asc
+    `);
+
+    const miPlan = res.rows.map(row => ({
+        id_persona: row.id_persona,
+        id_plan_entrenamiento: row.id_plan_entrenamiento,
+        dia: row.dia,
+        id_grupo_muscular: row.id_grupo_muscular,
+        nombre_grupo_muscular: row.nombre_grupo_muscular,
+        id_ejercicio: row.id_ejercicio,
+        nombre: row.nombre,
+        imagen: row.imagen,
+        series: row.series,
+        repeticiones: row.repeticiones,
+    }));
+
+    await client.end();
+
+    return miPlan;
 }
