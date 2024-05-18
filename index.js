@@ -248,11 +248,11 @@ app.post('/insertTrainingPlan', (req, res) => {
     }
 })
 
-app.post('/listMiPlan/:id', (req, res) => {
+app.post('/listMiPlan/:dni', (req, res) => {
 
-    const id = req.params.id;
+    const dni = req.params.dni;
 
-    getMiPlanList(id)
+    getMiPlanList(dni)
         .then((result) => {
             res.send(result);
         })
@@ -841,7 +841,7 @@ const getLastPlan = async () => {
     return ultimo_plan + 1;
 }
 
-const getMiPlanList = async (id) => {
+const getMiPlanList = async (dni) => {
 
     const client = new Client({
         user: "omodygym_user",
@@ -865,7 +865,7 @@ const getMiPlanList = async (id) => {
         inner join ejercicios e on e.id_ejercicio = pe.id_ejercicio
         inner join grupo_muscular gm on gm.id_grupo_muscular = e.id_grupo_muscular
         
-        where pe.id_persona = '${id}'
+        where pe.id_persona = (select id_persona from persona where numero_documento_identidad = '${dni}')
 
         order by pe.dia asc
     `);
