@@ -227,7 +227,28 @@ app.post('/asignTrainer/:idUsuario/:idEntrenador', (req, res) => {
 })
 
 
+app.get('/getLastPlan', async (req, res) => {
+    try {
+        const ultimoPlan = await getLastPlan();
+        res.send(ultimoPlan.toString());
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Error al obtener el último plan');
+    }
+})
 
+app.post('/insertTrainingPlan', (req, res) => {
+    try{
+        registerTrainingPlan(req.body)
+        .then((result) => {
+            res.send(result.res);
+        })
+
+    } catch (error){
+        console.error(error);
+        res.status(500).send('Error al insertar plan');
+    }
+})
 
 
 //-----------------------------Funciones----------------------------
@@ -392,7 +413,8 @@ const getClients = async (id) => {
         result = await client.query(`SELECT A.id_persona, A.nombre_1, A.apellido_1, A.apellido_2, EXTRACT(YEAR FROM AGE(a.fecha_nacimiento)) AS edad, a.fecha_nacimiento, a.telefono, d.nombre_sede, e.nombre as membresia, b.fecha_fin, a.numero_documento_identidad as dni,
         TO_CHAR( f.fecha_modificacion , 'DD/MM/YYYY') as modificacion_plan,
         TO_CHAR( g.fecha_modificacion , 'DD/MM/YYYY') as modificacion_metricas,
-        h.nombre_1 || ' ' || h.apellido_1 as entrenador FROM persona a INNER JOIN CONTRATO b ON a.ID_PERSONA = b.ID_PERSONA INNER JOIN TIPO_PERSONA c ON b.ID_TIPO_PERSONA = c.ID_TIPO_PERSONA INNER JOIN SEDE d ON b.ID_SEDE = d.ID_SEDE INNER JOIN MEMBRESIA e ON b.ID_MEMBRESIA = e.ID_MEMBRESIA LEFT JOIN (
+        h.nombre_1 || ' ' || h.apellido_1 as entrenador,
+        h.id_persona as id_entrenador FROM persona a INNER JOIN CONTRATO b ON a.ID_PERSONA = b.ID_PERSONA INNER JOIN TIPO_PERSONA c ON b.ID_TIPO_PERSONA = c.ID_TIPO_PERSONA INNER JOIN SEDE d ON b.ID_SEDE = d.ID_SEDE INNER JOIN MEMBRESIA e ON b.ID_MEMBRESIA = e.ID_MEMBRESIA LEFT JOIN (
             SELECT p.*
             FROM PLAN_ENTRENAMIENTO p
             INNER JOIN (
@@ -417,7 +439,8 @@ const getClients = async (id) => {
         result = await client.query(`SELECT A.id_persona, A.nombre_1, A.apellido_1, A.apellido_2, EXTRACT(YEAR FROM AGE(a.fecha_nacimiento)) AS edad, a.fecha_nacimiento, a.telefono, d.nombre_sede, e.nombre as membresia, b.fecha_fin, a.numero_documento_identidad as dni,
         TO_CHAR( f.fecha_modificacion , 'DD/MM/YYYY') as modificacion_plan,
         TO_CHAR( g.fecha_modificacion , 'DD/MM/YYYY') as modificacion_metricas, 
-        h.nombre_1 || ' ' || h.apellido_1 as entrenador
+        h.nombre_1 || ' ' || h.apellido_1 as entrenador,
+        h.id_persona as id_entrenador
         FROM persona a
         INNER JOIN CONTRATO b ON a.ID_PERSONA = b.ID_PERSONA INNER JOIN TIPO_PERSONA c ON b.ID_TIPO_PERSONA = c.ID_TIPO_PERSONA INNER JOIN SEDE d ON b.ID_SEDE = d.ID_SEDE INNER JOIN MEMBRESIA e ON b.ID_MEMBRESIA = e.ID_MEMBRESIA LEFT JOIN (
             SELECT p.*
@@ -456,7 +479,8 @@ const getClients = async (id) => {
         modificacion_metricas: row.modificacion_metricas,
         modificacion_plan: row.modificacion_plan,
         fecha_nacimiento: row.fecha_nacimiento,
-        entrenador: row.entrenador
+        entrenador: row.entrenador,
+        idEntrenador: row.id_entrenador
 
     }));
     await client.end();
@@ -493,6 +517,32 @@ const registerSede = async (sede, dni) => {
     console.log("result = ", result)
 
     return result;
+}
+
+const registerTrainingPlan  = async (body) => {
+
+    const client = new Client({
+        user: "omodygym_user",
+        host: "dpg-cocr9amv3ddc739ki7b0-a.oregon-postgres.render.com",
+        database: "omodygym",
+        password: "9sAnVEwzwYzR1GMdsET5UQo7XzYjcrup",
+        port: 5432,
+        ssl: {
+            rejectUnauthorizedL: false,
+        }
+    });
+
+    await client.connect();
+
+    const result = await client.query(`
+    INSERT INTO public.plan_entrenamiento(ID_PERSONA, ID_EJERCICIO, SERIES, REPETICIONES, DIA, FECHA_CREACION, ID_PLAN_ENTRENAMIENTO, FECHA_MODIFICACION, ESTADO, USUARIO_MODIFICACION, ID_ENTRENADOR)
+    VALUES (${body.idUsuario}, ${body.idEjercicio}, ${body.series}, ${body.repeticiones}, ${body.dia}, CURRENT_DATE, ${body.idPlanEntrenamiento}, CURRENT_DATE, 'A', ${body.idEntrenador}, ${body.idEntrenador});
+    `);
+    const clientes = result.rows.map(row => ({
+
+    }));
+await client.end();
+return clientes;
 }
 
 const getSedesList = async () => {
@@ -718,4 +768,25 @@ const asignarEntrenador = async(usuario, entrenador) => {
     const result = await client.query(`UPDATE PERSONA SET ID_ENTRENADOR = ${idEntrenador} WHERE ID_PERSONA = ${usuario}`);
     await client.end();
     return result;
+}
+
+
+const getLastPlan = async () => {
+    const client = new Client({
+        user: "omodygym_user",
+        host: "dpg-cocr9amv3ddc739ki7b0-a.oregon-postgres.render.com",
+        database: "omodygym",
+        password: "9sAnVEwzwYzR1GMdsET5UQo7XzYjcrup",
+        port: 5432,
+        ssl: {
+            rejectUnauthorizedL: false,
+        }
+    });
+    await client.connect();
+    const result = await client.query(`SELECT MAX(id_plan_entrenamiento) AS ultimo_plan_entrenamiento
+    FROM plan_entrenamiento;`);
+    await client.end();
+
+    const ultimo_plan = result.rows[0].ultimo_plan_entrenamiento
+    return ultimo_plan + 1;
 }
