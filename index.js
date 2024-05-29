@@ -299,6 +299,16 @@ app.post('/updateSiteStatus/:id', (req, res) => {
         console.error("Error al obtener las sedes:", error);
     })
 })
+
+app.post('/listMyMetrics/:dni', (req, res) => {
+
+    const dni = req.params.dni;
+
+    listMyMetrics(dni)
+        .then((result) => {
+            res.send(result);
+        })
+});
 //-----------------------------Funciones----------------------------
 
 const login = async (user, password) => {
@@ -994,7 +1004,6 @@ const getProfileData = async (dni) => {
     return miPerfil;
 }
 
-
 const getClientMetrics = async (cliente) => {
     const client = new Client({
         user: "omodygym_user",
@@ -1085,15 +1094,78 @@ const updateSiteStatus = async (id) => {
     var estadoActualResult = await client.query(`SELECT ESTADO FROM SEDE WHERE ID_SEDE = ${id}`);
     var estadoActual = estadoActualResult.rows[0].estado;
     var res = undefined;
-    if(estadoActual === 'A'){
+    if (estadoActual === 'A') {
         res = await client.query(`UPDATE SEDE SET ESTADO = 'I' WHERE ID_SEDE = ${id}`);
     }
-    else{
-         res = await client.query(`UPDATE SEDE SET ESTADO = 'A' WHERE ID_SEDE = ${id}`);
+    else {
+        res = await client.query(`UPDATE SEDE SET ESTADO = 'A' WHERE ID_SEDE = ${id}`);
     }
-   
+
     const result = res.rows[0];
     await client.end();
     return result;
 
+}
+
+const listMyMetrics = async (dni) => {
+
+    const client = new Client({
+        user: "omodygym_user",
+        host: "dpg-cocr9amv3ddc739ki7b0-a.oregon-postgres.render.com",
+        database: "omodygym",
+        password: "9sAnVEwzwYzR1GMdsET5UQo7XzYjcrup",
+        port: 5432,
+        ssl: {
+            rejectUnauthorizedL: false,
+        }
+    });
+
+    await client.connect();
+
+    const res = await client.query(`
+        SELECT * 
+        FROM progreso pro
+        WHERE pro.id_persona = (
+            SELECT id_persona 
+            FROM persona 
+            WHERE numero_documento_identidad = '${dni}'
+        ) 
+        AND pro.consecutivo = (
+            SELECT MAX(consecutivo) 
+            FROM progreso 
+            WHERE id_persona = (
+                SELECT id_persona 
+                FROM persona 
+                WHERE numero_documento_identidad = '${dni}'
+            )
+        );
+    `);
+
+    const myMetrics = res.rows.map(row => ({
+
+        id_persona: row.id_persona,
+        peso: row.peso,
+        altura: row.altura,
+        edad: row.edad,
+        objetivo: row.objetivo,
+        consecutivo: row.consecutivo,
+        grasa: row.grasa,
+        imc: row.imc,
+        fecha_creacion: row.fecha_creacion,
+        fecha_modificacion: row.fecha_modificacion,
+        estado: row.estado,
+        usuario_modificacion: row.usuario_modificacion,
+        meta: row.meta,
+        bicep_izquierdo: row.bicep_izquierdo,
+        bicep_derecho: row.bicep_derecho,
+        bicep_izquierdo: row.bicep_izquierdo,
+        cadera: row.cadera,
+        cintura: row.cintura,
+        muslo_derecho: row.muslo_derecho,
+        muslo_izquierdo: row.muslo_izquierdo,
+    }));
+
+    await client.end();
+
+    return myMetrics;
 }
