@@ -258,6 +258,16 @@ app.post('/listMiPlan/:dni', (req, res) => {
         })
 });
 
+app.post('/getProfileData/:dni', (req, res) => {
+
+    const dni = req.params.dni;
+
+    getProfileData(dni)
+        .then((result) => {
+            res.send(result);
+        })
+});
+
 //-----------------------------Funciones----------------------------
 
 const login = async (user, password) => {
@@ -907,4 +917,48 @@ const createClient = async (nombre, apellido1, apellido2, sede, membresia, dni, 
 
     return result;
 
+}
+
+const getProfileData = async (dni) => {
+
+    const client = new Client({
+        user: "omodygym_user",
+        host: "dpg-cocr9amv3ddc739ki7b0-a.oregon-postgres.render.com",
+        database: "omodygym",
+        password: "9sAnVEwzwYzR1GMdsET5UQo7XzYjcrup",
+        port: 5432,
+        ssl: {
+            rejectUnauthorizedL: false,
+        }
+    });
+
+    await client.connect();
+
+    const res = await client.query(`
+        select pe.id_persona, pe.nombre_1, pe.nombre_2, pe.apellido_1, pe.apellido_2, pe.fecha_nacimiento, pe.correo,
+            tp.detalle_tipo, s.nombre_sede
+            from persona pe
+            inner join contrato c on c.id_persona = pe.id_persona
+            inner join tipo_persona tp on tp.id_tipo_persona = c.id_tipo_persona
+            inner join sede s on s.id_sede = c.id_sede
+            where pe.id_persona = (select id_persona from persona pp where pp.numero_documento_identidad = '${dni}')
+    `);
+
+
+
+    const miPerfil = res.rows.map(row => ({
+        id_persona: row.id_persona,
+        nombre_1: row.nombre_1,
+        nombre_2: row.nombre_2,
+        apellido_1: row.apellido_1,
+        apellido_2: row.apellido_2,
+        fecha_nacimiento: row.fecha_nacimiento,
+        correo: row.correo,
+        detalle_tipo: row.detalle_tipo,
+        nombre_sede: row.nombre_sede,
+    }));
+
+    await client.end();
+
+    return miPerfil;
 }
