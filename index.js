@@ -268,6 +268,37 @@ app.post('/getProfileData/:dni', (req, res) => {
         })
 });
 
+
+app.post('/getClientMetrics/:client', (req, res) => {
+    const client = req.params.client;
+
+    getClientMetrics(client)
+        .then((result) => {
+            res.send(result);
+        })
+})
+
+app.post('/insertMetric', (req, res) => {
+    try {
+        registerMetrics(req.body)
+            .then((result) => {
+                res.send(result.res);
+            })
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Error al registrar métricas');
+    }
+})
+
+app.post('/updateSiteStatus/:id', (req, res) => {
+    const idS = req.params.id;
+    updateSiteStatus(idS).then((result) => {
+        res.send(result);
+    }).catch((error) => {
+        console.error("Error al obtener las sedes:", error);
+    })
+})
 //-----------------------------Funciones----------------------------
 
 const login = async (user, password) => {
@@ -961,4 +992,108 @@ const getProfileData = async (dni) => {
     await client.end();
 
     return miPerfil;
+}
+
+
+const getClientMetrics = async (cliente) => {
+    const client = new Client({
+        user: "omodygym_user",
+        host: "dpg-cocr9amv3ddc739ki7b0-a.oregon-postgres.render.com",
+        database: "omodygym",
+        password: "9sAnVEwzwYzR1GMdsET5UQo7XzYjcrup",
+        port: 5432,
+        ssl: {
+            rejectUnauthorizedL: false,
+        }
+    });
+
+    await client.connect();
+
+    const res = await client.query(`SELECT id_persona, peso, altura, edad, objetivo, consecutivo, grasa, imc, meta, bicep_izquierdo, bicep_derecho, cadera, cintura, muslo_derecho, muslo_izquierdo, TO_CHAR(COALESCE(fecha_modificacion, fecha_creacion), 'YYYY-MM-DD') AS fecha,  TO_CHAR(COALESCE(fecha_modificacion, fecha_creacion), 'DD') AS dia, TO_CHAR(COALESCE(fecha_modificacion, fecha_creacion), 'Month') as mes, TO_CHAR(COALESCE(fecha_modificacion, fecha_creacion), 'MM') AS mes_numero, estado, usuario_modificacion
+    FROM PROGRESO
+    WHERE id_persona = ${cliente} ORDER BY consecutivo desc`);
+
+    const clientMetrics = res.rows.map(row => ({
+        id_persona: row.id_persona,
+        peso: row.peso,
+        altura: row.altura,
+        edad: row.edad,
+        objetivo: row.objetivo,
+        consecutivo: row.consecutivo,
+        grasa: row.grasa,
+        imc: row.imc,
+        bicep_izquierdo: row.bicep_izquierdo,
+        bicep_derecho: row.bicep_derecho,
+        cadera: row.cadera,
+        cintura: row.cintura,
+        muslo_izquierdo: row.muslo_izquierdo,
+        muslo_derecho: row.muslo_derecho,
+        fecha: row.fecha,
+        dia: row.dia,
+        mes: row.mes,
+        mes_numero: row.mes_numero,
+        estado: row.estado,
+        meta: row.meta
+    }));
+
+    await client.end();
+
+    return clientMetrics;
+
+}
+
+const registerMetrics = async (body) => {
+
+    const client = new Client({
+        user: "omodygym_user",
+        host: "dpg-cocr9amv3ddc739ki7b0-a.oregon-postgres.render.com",
+        database: "omodygym",
+        password: "9sAnVEwzwYzR1GMdsET5UQo7XzYjcrup",
+        port: 5432,
+        ssl: {
+            rejectUnauthorizedL: false,
+        }
+    });
+
+    await client.connect();
+
+    const result = await client.query(`INSERT INTO public.progreso 
+    (id_persona, peso, altura, edad, objetivo, consecutivo, grasa, imc, fecha_creacion, fecha_modificacion, estado, usuario_modificacion, meta, bicep_izquierdo, bicep_derecho, cadera, cintura, muslo_derecho, muslo_izquierdo)
+    VALUES (${body.id_persona}, ${body.peso}, ${body.altura}, ${body.edad}, ${body.objetivo}, ${body.consecutivo}, ${body.grasa}, ${body.imc}, CURRENT_DATE, CURRENT_DATE, 'A', ${body.usuario_modificacion}, '${body.meta}', ${body.bicep_izquierdo}, ${body.bicep_derecho}, ${body.cadera}, ${body.cintura}, ${body.muslo_derecho}, ${body.muslo_izquierdo});`);
+
+    await client.end();
+
+    const clientes = result.rows.map(row => ({
+
+    }));
+    await client.end();
+    return clientes;
+}
+
+const updateSiteStatus = async (id) => {
+    const client = new Client({
+        user: "omodygym_user",
+        host: "dpg-cocr9amv3ddc739ki7b0-a.oregon-postgres.render.com",
+        database: "omodygym",
+        password: "9sAnVEwzwYzR1GMdsET5UQo7XzYjcrup",
+        port: 5432,
+        ssl: {
+            rejectUnauthorizedL: false,
+        }
+    });
+    await client.connect();
+    var estadoActualResult = await client.query(`SELECT ESTADO FROM SEDE WHERE ID_SEDE = ${id}`);
+    var estadoActual = estadoActualResult.rows[0].estado;
+    var res = undefined;
+    if(estadoActual === 'A'){
+        res = await client.query(`UPDATE SEDE SET ESTADO = 'I' WHERE ID_SEDE = ${id}`);
+    }
+    else{
+         res = await client.query(`UPDATE SEDE SET ESTADO = 'A' WHERE ID_SEDE = ${id}`);
+    }
+   
+    const result = res.rows[0];
+    await client.end();
+    return result;
+
 }
