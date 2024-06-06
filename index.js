@@ -82,7 +82,7 @@ app.post('/createClient/:nombre/:apellido1/:apellido2/:sede/:membresia/:dni/:fec
     const apellido2 = req.params.apellido2;
     const sede = req.params.sede;
     const membresia = req.params.membresia;
-    const dni = req.params.fechanac;
+    const dni = req.params.dni;
     const fecha_nacimiento = req.params.fechanac;
     const telefono = req.params.telefono;
     const user = req.params.usuario;
