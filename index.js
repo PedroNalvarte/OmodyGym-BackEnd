@@ -309,6 +309,16 @@ app.post('/listMyMetrics/:dni', (req, res) => {
             res.send(result);
         })
 });
+
+app.post('/verifyAccess/:dni', (req, res) => {
+
+    const dni = req.params.dni;
+
+    verifyAccess(dni)
+        .then((result) => {
+            res.send(result);
+        })
+});
 //-----------------------------Funciones----------------------------
 
 const login = async (user, password) => {
@@ -1168,4 +1178,49 @@ const listMyMetrics = async (dni) => {
     await client.end();
 
     return myMetrics;
+}
+
+const verifyAccess = async (dni) => {
+
+    const client = new Client({
+        user: "omodygym_user",
+        host: "dpg-cocr9amv3ddc739ki7b0-a.oregon-postgres.render.com",
+        database: "omodygym",
+        password: "9sAnVEwzwYzR1GMdsET5UQo7XzYjcrup",
+        port: 5432,
+        ssl: {
+            rejectUnauthorizedL: false,
+        }
+    });
+
+    await client.connect();
+
+    const res = await client.query(`
+        select p.id_persona, p.numero_documento_identidad, concat(p.nombre_1, ' ', p.apellido_1) as nombre_cliente
+            , m.nombre as nombre_membresia, s.nombre_sede, pa.consecutivo, pa.inicio_periodo, pa.fin_periodo, pa.dia_cobro
+            , pa.dia_pago, estado_pago
+        from persona p
+            inner join contrato t on t.id_persona = p.id_persona
+            inner join membresia m on m.id_membresia = t.id_membresia
+            inner join sede s on s.id_sede = t.id_sede
+            inner join pagos pa on p.id_persona = pa.id_persona
+            where p.numero_documento_identidad = '${dni}'
+    `);
+
+    const miPlan = res.rows.map(row => ({
+        id_persona: row.id_persona,
+        numero_documento_identidad: row.numero_documento_identidad,
+        nombre_cliente: row.nombre_cliente,
+        nombre_membresia: row.nombre_membresia,
+        nombre_sede: row.nombre_sede,
+        inicio_periodo: row.inicio_periodo,
+        fin_periodo: row.fin_periodo,
+        dia_cobro: row.dia_cobro,
+        dia_pago: row.dia_pago,
+        estado_pago: row.estado_pago,
+    }));
+
+    await client.end();
+
+    return miPlan;
 }
