@@ -319,6 +319,14 @@ app.post('/verifyAccess/:dni', (req, res) => {
             res.send(result);
         })
 });
+
+app.post('/deleteLastPlan/:id', (req, res) => {
+    const id = req.params.id;
+    deleteLastPlan(id)
+        .then((result) => {
+            res.send(result);
+        })
+})
 //-----------------------------Funciones----------------------------
 
 const login = async (user, password) => {
@@ -927,7 +935,7 @@ const getMiPlanList = async (dni) => {
         inner join grupo_muscular gm on gm.id_grupo_muscular = e.id_grupo_muscular
         
         where pe.id_persona = (select id_persona from persona where numero_documento_identidad = '${dni}')
-
+        and pe.estado = 'A'
         order by pe.dia asc
     `);
 
@@ -1223,4 +1231,26 @@ const verifyAccess = async (dni) => {
     await client.end();
 
     return miPlan;
+}
+
+const deleteLastPlan = async (id) => {
+
+    const client = new Client({
+        user: "omodygym_user",
+        host: "dpg-cocr9amv3ddc739ki7b0-a.oregon-postgres.render.com",
+        database: "omodygym",
+        password: "9sAnVEwzwYzR1GMdsET5UQo7XzYjcrup",
+        port: 5432,
+        ssl: {
+            rejectUnauthorizedL: false,
+        }
+    });
+
+    await client.connect();
+
+    const res =  await client.query(`UPDATE PLAN_ENTRENAMIENTO SET ESTADO = 'I' WHERE ID_PERSONA = '${id}' AND ESTADO = 'A';`);
+    await client.end();
+
+    return res;
+
 }
