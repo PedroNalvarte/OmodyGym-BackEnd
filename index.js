@@ -138,6 +138,7 @@ app.post('/registerColaborador', (req, res) => {
 
 })
 
+
 app.post('/createMembership/:detalle/:costo/:nombre/:usuario', (req, res) => {
     const detail = req.params.detalle;
     const cost = req.params.costo;
@@ -327,6 +328,16 @@ app.post('/deleteLastPlan/:id', (req, res) => {
             res.send(result);
         })
 })
+
+app.post('/updateAccess/:idMembresia/:idSede/:fecha/:usuario',(req, res) => {
+    const membresia = req.params.idMembresia;
+    const sede = req.params.idSede;
+    const fecha = req.params.fecha;
+    const usuario = req.params.usuario;
+    updateAccess(membresia, sede, fecha, usuario)
+        .then((result) => {res.send(result)});
+})
+
 //-----------------------------Funciones----------------------------
 
 const login = async (user, password) => {
@@ -1205,7 +1216,7 @@ const verifyAccess = async (dni) => {
 
     const res = await client.query(`
         select p.id_persona, p.numero_documento_identidad, concat(p.nombre_1, ' ', p.apellido_1) as nombre_cliente
-            , m.nombre as nombre_membresia, s.nombre_sede, pa.consecutivo, pa.inicio_periodo, pa.fin_periodo, pa.dia_cobro
+            , m.nombre as nombre_membresia, t.fin_membresia as estado_membresia, s.nombre_sede, pa.consecutivo, pa.inicio_periodo, pa.fin_periodo, pa.dia_cobro
             , pa.dia_pago, estado_pago
         from persona p
             inner join contrato t on t.id_persona = p.id_persona
@@ -1220,6 +1231,7 @@ const verifyAccess = async (dni) => {
         numero_documento_identidad: row.numero_documento_identidad,
         nombre_cliente: row.nombre_cliente,
         nombre_membresia: row.nombre_membresia,
+        estado_membresia: row.estado_membresia,
         nombre_sede: row.nombre_sede,
         inicio_periodo: row.inicio_periodo,
         fin_periodo: row.fin_periodo,
@@ -1253,4 +1265,23 @@ const deleteLastPlan = async (id) => {
 
     return res;
 
+}
+
+const updateAccess = async (membresia, sede, fecha, id) => {
+    const client = new Client({
+        user: "omodygym_user",
+        host: "dpg-cocr9amv3ddc739ki7b0-a.oregon-postgres.render.com",
+        database: "omodygym",
+        password: "9sAnVEwzwYzR1GMdsET5UQo7XzYjcrup",
+        port: 5432,
+        ssl: {
+            rejectUnauthorizedL: false,
+        }
+    });
+
+    await client.connect();
+    const res =  await client.query(`UPDATE CONTRATO SET id_membresia = ${membresia}, id_sede = ${sede}, fin_membresia = (DATE '${fecha}') WHERE ID_PERSONA = '${id}';`);
+    await client.end();
+
+    return res;
 }
