@@ -510,7 +510,9 @@ const getClients = async (id) => {
         TO_CHAR(f.fecha_modificacion, 'DD/MM/YYYY') AS modificacion_plan,
         TO_CHAR(g.fecha_modificacion, 'DD/MM/YYYY') AS modificacion_metricas, 
         h.nombre_1 || ' ' || h.apellido_1 AS entrenador,
-        h.id_persona AS id_entrenador
+        h.id_persona AS id_entrenador,
+        b.id_sede,
+        b.fecha_creacion
     FROM 
         persona a
     INNER JOIN 
@@ -562,7 +564,9 @@ const getClients = async (id) => {
         TO_CHAR(f.fecha_modificacion, 'DD/MM/YYYY') AS modificacion_plan,
         TO_CHAR(g.fecha_modificacion, 'DD/MM/YYYY') AS modificacion_metricas, 
         h.nombre_1 || ' ' || h.apellido_1 AS entrenador,
-        h.id_persona AS id_entrenador
+        h.id_persona AS id_entrenador,
+        b.id_sede,
+        b.fecha_creacion
     FROM 
         persona a
     INNER JOIN 
@@ -615,7 +619,9 @@ const getClients = async (id) => {
         modificacion_plan: row.modificacion_plan,
         fecha_nacimiento: row.fecha_nacimiento,
         entrenador: row.entrenador,
-        idEntrenador: row.id_entrenador
+        idEntrenador: row.id_entrenador,
+        idSede:row.id_sede,
+        fechaCreacion: row.fecha_creacion
 
     }));
     await client.end();
@@ -725,7 +731,7 @@ const getColaboradoresList = async () => {
     await client.connect();
 
     const res = await client.query(`select p.id_persona, p.nombre_1, p.nombre_2, p.apellido_1, p.apellido_2, p.fecha_nacimiento, p.correo, p.sexo, p.telefono,
-            p.numero_documento_identidad, p.fecha_creacion, c.id_tipo_persona, tp.detalle_tipo, c.fecha_inicio
+            p.numero_documento_identidad, p.fecha_creacion, c.id_tipo_persona, tp.detalle_tipo, c.fecha_inicio, c.id_sede
             from persona p
         inner join contrato c on p.id_persona = c.id_persona
         inner join tipo_persona tp on tp.id_tipo_persona = c.id_tipo_persona
@@ -747,7 +753,7 @@ const getColaboradoresList = async () => {
         id_tipo_persona: row.id_tipo_persona,
         detalle_tipo: row.detalle_tipo,
         fecha_inicio: row.fecha_inicio,
-
+        idSede: row.id_sede
     }));
 
     await client.end();
